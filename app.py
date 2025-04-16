@@ -43,8 +43,9 @@ def get_news():
         results.append(f"📰 {title}\n{description}\n🔗 {link}")
 
     return jsonify({
-        "answer": "\n\n".join(results)
-    })
+    "answer": "📡 [Данные получены через API]\n\n" + "\n\n".join(results)
+})
+
 
 @app.route('/', methods=['GET'])
 def home():
