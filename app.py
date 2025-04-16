@@ -31,5 +31,10 @@ def get_news():
         "answer": "\n\n".join(results)
     })
 
+@app.route('/', methods=['GET'])
+def home():
+    return '✅ Сервер работает. Ожидается POST-запрос на /retrieval', 200
+
+
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000)
