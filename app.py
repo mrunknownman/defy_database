@@ -3,7 +3,7 @@ import requests
 
 app = Flask(__name__)
 
-NEWS_API_KEY = 'ТВОЙ_API_КЛЮЧ'
+NEWS_API_KEY = 'pub_808730828b8d9584c94e98325e4430b236db8'
 
 @app.route('/news', methods=['POST'])
 def get_news():
