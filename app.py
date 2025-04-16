@@ -3,38 +3,44 @@ import requests
 
 app = Flask(__name__)
 
+# API-ключ от NewsData.io (можно оставить в коде, как ты хочешь)
 NEWS_API_KEY = 'pub_808730828b8d9584c94e98325e4430b236db8'
 
-@app.route('/news', methods=['POST'])
+# Собственный ключ для доступа к API (вводится только в Dify)
+MY_SECRET_API_KEY = 'apikey'
+
+@app.route('/retrieval', methods=['POST'])
 def get_news():
-    data = request.get_json()
-    user_query = data.get("query", "")
-    
-    # Не используем knowledge_id, просто игнорируем
-    print(f"[INFO] Запрос от Dify: {user_query}")
-    
-    # Запрос к внешнему API
+    # Проверяем авторизацию
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header != f"Bearer {MY_SECRET_API_KEY}":
+        return jsonify({"error": "Unauthorized"}), 401
+
+    # Получаем ключевые слова из запроса, если нужно (не обязательно)
+    user_query = request.json.get("query", "")
+
+    # Запрашиваем новости
     url = "https://newsdata.io/api/1/news"
     params = {
         "apikey": NEWS_API_KEY,
         "language": "ru",
         "q": user_query,
-        "category": "top,world,technology,health,entertainment,business"
     }
 
     response = requests.get(url, params=params)
-    if response.status_code != 200:
-        return jsonify({"answer": f"Ошибка получения новостей: {response.status_code}"}), 500
 
-    data = response.json()
+    if response.status_code != 200:
+        return jsonify({"answer": f"Ошибка получения новостей: {response.status_code}"}), 422
+
+    news_data = response.json()
+
+    # Составляем ответ
     results = []
-    for article in data.get("results", [])[:20]:  # до 20 новостей
+    for article in news_data.get("results", [])[:10]:
         title = article.get("title", "Без заголовка")
         description = article.get("description", "")
-        results.append(f"{title}: {description}")
-
-    if not results:
-        return jsonify({"answer": "Новости по запросу не найдены."})
+        link = article.get("link", "")
+        results.append(f"📰 {title}\n{description}\n🔗 {link}")
 
     return jsonify({
         "answer": "\n\n".join(results)
@@ -42,7 +48,7 @@ def get_news():
 
 @app.route('/', methods=['GET'])
 def home():
-    return '✅ Сервер работает. Используй POST /news для получения новостей.'
+    return "✅ Сервер работает. Эндпоинт: /retrieval (POST)", 200
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000)
